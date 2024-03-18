@@ -1,6 +1,7 @@
+
 (env
   (dev
-    (flags (:standard -w -69))))
+    (flags (:standard -w -69 -w -32))))
 
 (executable
  (public_name sharkdown)

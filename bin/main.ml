@@ -1,6 +1,5 @@
 open Astring
 
-
 module Block = struct
   type t = {
     kind : [ `Build | `Run  ];
@@ -20,6 +19,17 @@ module Block = struct
     | _ -> None
 
   let body b = b.body
+
+  let command_list b =
+    let regex_newline = Str.regexp "\\\\\n" and regex_comment = Str.regexp "#.*$" in
+    Str.global_replace regex_newline "" b.body |>
+    Str.global_replace regex_comment "" |>
+    String.cuts ~sep:"\n" |>
+    List.filter_map (fun l ->
+      match l with
+      | "" -> None
+      | x -> Some x
+    )
 end
 
 let parse_frontmatter frontmatter =
@@ -40,7 +50,7 @@ let parse_markdown (markdown : string) : Block.t list =
       in
       let body = Cmarkit.Block.Code_block.code node in
       let body =
-        ((List.map Cmarkit.Block_line.to_string body) |> String.concat ~sep:"\n")
+        ((List.map Cmarkit.Block_line.to_string body) |> List.map String.trim |> String.concat ~sep:"\n")
       in (
         match Block.of_info_string body info_str with
         | Some b -> blocks := b :: !blocks
@@ -65,7 +75,9 @@ let parse_sharkdown file_path =
     | _ -> failwith "Malformed frontmatter/markdown file"
     in
     List.iter (fun b ->
-      Printf.printf "%s\n" (Block.body b)
+      List.iter (fun c ->
+        Printf.printf "%s\n" c
+      ) (Block.command_list b)
     ) ast
 
 let () =
