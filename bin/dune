@@ -1,0 +1,8 @@
+(env
+  (dev
+    (flags (:standard -w -69))))
+
+(executable
+ (public_name sharkdown)
+ (name main)
+ (libraries sharkdown eio_main yaml cmarkit unix astring))
