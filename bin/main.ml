@@ -58,12 +58,12 @@ let parse_sharkdown file_path =
       Printf.printf "\tInputs:\n";
       List.iter (
         fun a ->
-          Printf.printf "\t\t%s\n" a
+          Printf.printf "\t\t%s\n" (DataFile.path a)
       ) (OrderedCommand.inputs oc);
       Printf.printf "\tOutputs:\n";
       List.iter (
         fun a ->
-          Printf.printf "\t\t%s\n" a
+          Printf.printf "\t\t%s\n" (DataFile.path a)
       ) (OrderedCommand.outputs oc);
     )
 

@@ -1,11 +1,25 @@
 open Command
 open Frontmatter
 
+module DataFile = struct
+  type t = {
+    id : int;
+    path : string;
+  }
+
+  let create id path = { id ; path }
+
+  let id d = d.id
+
+  let path d = d.path
+end
+
 module OrderedCommand = struct
   type t = {
+    id : int;
     command : Command.t;
-    inputs : string list;
-    outputs : string list;
+    inputs : DataFile.t list;
+    outputs : DataFile.t list;
   }
 
   let command o = o.command
@@ -16,39 +30,37 @@ module OrderedCommand = struct
 
   let order_command_list (metadata : Frontmatter.t) (commands : Command.t list) : t list =
 
-    let rec loop commands known_files =
+    let input_map = List.mapi (fun i f ->
+      (f, DataFile.create i f);
+    ) (Frontmatter.inputs metadata) in
+    let counter = ref (List.length input_map) in
 
+    let rec loop commands datafile_map =
       match commands with
       | [] -> []
       | hd :: tl -> (
         let file_args = Command.file_args hd in
+        (* TODO: dedup *)
 
-        let is_inputs = List.map (fun x ->
-          match List.find_opt (fun t -> t = x) known_files with
-          | None -> (x, false)
-          | Some _ -> (x, true)
+        let inputs = List.filter_map (fun path ->
+          List.assoc_opt path datafile_map
         ) file_args in
 
-        let inputs = List.filter_map (fun x ->
-          match x with
-          | _, false -> None
-          | f, true -> Some f
-        ) is_inputs in
-        let outputs = List.filter_map (fun x ->
-          match x with
-          | f, false -> Some f
-          | _, true -> None
-        ) is_inputs in
+        let outputs = List.filter_map (fun path ->
+          match List.assoc_opt path datafile_map with
+          | None -> let id = !counter in counter := !counter + 1; Some (DataFile.create id path)
+          | Some _ -> None
+        ) file_args in
 
         let x = {
+          id = !counter;
           command = hd;
           inputs = inputs;
           outputs = outputs;
         } in
-        x :: (loop tl (List.concat [ known_files ; outputs]))
+        x :: (loop tl (List.concat [ datafile_map ; List.map (fun o -> ((DataFile.path o, o))) outputs]))
       )
     in
-    loop commands (Frontmatter.inputs metadata)
-
+    loop commands input_map
 
 end
