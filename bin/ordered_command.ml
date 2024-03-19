@@ -1,4 +1,5 @@
 open Command
+open Frontmatter
 
 module OrderedCommand = struct
   type t = {
@@ -13,7 +14,7 @@ module OrderedCommand = struct
 
   let outputs o = o.outputs
 
-  let order_command_list (commands : Command.t list) : t list =
+  let order_command_list (metadata : Frontmatter.t) (commands : Command.t list) : t list =
 
     let rec loop commands known_files =
 
@@ -47,7 +48,7 @@ module OrderedCommand = struct
         x :: (loop tl (List.concat [ known_files ; outputs]))
       )
     in
-    loop commands []
+    loop commands (Frontmatter.inputs metadata)
 
 
 end

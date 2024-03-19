@@ -1,12 +1,13 @@
 open Astring
 open Block
 open Command
+open Frontmatter
 open Ordered_command
 
 let parse_frontmatter frontmatter =
-  match (String.trim frontmatter |> Yaml.of_string) with
-  | Result.Ok _frontmatter -> Printf.printf ("Parsed frontmatter ok\n")
-  | Result.Error _ -> Printf.eprintf "Failed to parse frontmatter\n"
+  match (Frontmatter.of_string frontmatter) with
+  | Some frontmatter -> frontmatter
+  | None -> failwith "Failed to parse frontmatter\n"
 
 let parse_markdown (markdown : string) : Block.t list =
   let doc = Cmarkit.Doc.of_string markdown in
@@ -38,11 +39,10 @@ let parse_markdown (markdown : string) : Block.t list =
 
 let parse_sharkdown file_path =
     let template = Eio.Path.load file_path in
-    let ast = match String.cuts ~sep:"---" template with
+    let metadata, ast = match String.cuts ~sep:"---" template with
     | [frontmatter; markdown] | [ ""; frontmatter; markdown ] ->
-      parse_frontmatter frontmatter;
-      parse_markdown markdown
-    | [markdown] -> parse_markdown markdown
+      (parse_frontmatter frontmatter, parse_markdown markdown)
+    | [markdown] -> (Frontmatter.empty, parse_markdown markdown)
     | _ -> failwith "Malformed frontmatter/markdown file"
     in
     (* Initially ignore block scoping *)
@@ -50,7 +50,7 @@ let parse_sharkdown file_path =
     List.concat |>
     List.filter_map Command.of_string |>
 
-    OrderedCommand.order_command_list |>
+    OrderedCommand.order_command_list metadata |>
 
     List.iter (fun oc ->
       let c = OrderedCommand.command oc in
