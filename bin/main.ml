@@ -52,20 +52,22 @@ let parse_sharkdown file_path =
 
     OrderedCommand.order_command_list metadata |>
 
-    List.iter (fun oc ->
+    Dotrenderer.project_to_dot
+
+    (* List.iter (fun oc ->
       let c = OrderedCommand.command oc in
-      Printf.printf "%s\n" (Command.name c);
+      Printf.printf "%d: %s\n" (OrderedCommand.id oc) (Command.name c);
       Printf.printf "\tInputs:\n";
       List.iter (
         fun a ->
-          Printf.printf "\t\t%s\n" (DataFile.path a)
+          Printf.printf "\t\t%d: %s\n" (DataFile.id a) (DataFile.path a)
       ) (OrderedCommand.inputs oc);
       Printf.printf "\tOutputs:\n";
       List.iter (
         fun a ->
-          Printf.printf "\t\t%s\n" (DataFile.path a)
+          Printf.printf "\t\t%d: %s\n" (DataFile.id a) (DataFile.path a)
       ) (OrderedCommand.outputs oc);
-    )
+    ) *)
 
 
 let () =

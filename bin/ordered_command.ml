@@ -12,6 +12,9 @@ module DataFile = struct
   let id d = d.id
 
   let path d = d.path
+
+  let compare a b =
+    Int.compare a.id b.id
 end
 
 module OrderedCommand = struct
@@ -27,6 +30,8 @@ module OrderedCommand = struct
   let inputs o = o.inputs
 
   let outputs o = o.outputs
+
+  let id o = o.id
 
   let order_command_list (metadata : Frontmatter.t) (commands : Command.t list) : t list =
 
@@ -58,6 +63,7 @@ module OrderedCommand = struct
           inputs = inputs;
           outputs = outputs;
         } in
+        counter := !counter + 1;
         x :: (loop tl (List.concat [ datafile_map ; List.map (fun o -> ((DataFile.path o, o))) outputs]))
       )
     in
